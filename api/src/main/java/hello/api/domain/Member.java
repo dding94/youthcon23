@@ -1,4 +1,4 @@
-package hello.module.domain;
+package hello.api.domain;
 
 import javax.persistence.*;
 

@@ -1,7 +1,7 @@
-package hello.module.presentation;
+package hello.api.presentation;
 
-import hello.module.application.MemberService;
-import hello.module.domain.Member;
+import hello.api.application.MemberService;
+import hello.api.domain.Member;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
