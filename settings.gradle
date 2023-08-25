@@ -1,3 +1,4 @@
 rootProject.name = 'youthcon23'
 
 include 'api'
+include 'core'

@@ -1,6 +1,6 @@
 package hello.api.presentation;
 
-import hello.api.application.MemberService;
+import hello.core.application.MemberService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.DeleteMapping;
