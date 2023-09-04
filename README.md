@@ -109,5 +109,74 @@
 6. 빌드 새로고침을 하고, 이제는 존재하지 않는 hello.api.application, domain 부분을 core 로 변경합니다.
 7. api 의 모듈이 core 모듈을 의존할 수 있게 설정해 줍니다. 
 8. core 모듈이 제대로 import 된 것을 확인하고 스프링 부트를 실행을 해봅니다.
-9. bean 문제를 해결해 봅니다.
-10. 현재는 api gradle 만 build 를 하고 있었는데 각각 gradle(root, core) 을 build 해봅시다.  
+9. <details><summary> 실행 후 오류를 보니 bean 관련 에러가 발생합니다. 문제를 해결해 봅니다.   </summary>
+
+    @SpringBootApplication 의 동작방식을 이해하셔야 합니다.   
+    해당 어노테이션이 위치하는 패키지와 하위 경로의 빈들을 스캔하기 때문에 hello.api 패키지에 존재하는 해당 어노테이션은 hello.core 의 패키지에 등록된 빈은 스캔할 수 없습니다.   
+    1. hello.core 패키지도 스캔할 수 있게 scanBasePackage 를 설정.
+    2. hello.api 패키지 에 존재하는 어노테이션을 hello 로 이동.   
+
+    저는 두번째 방법을 선택했습니다. 추후 모듈이 늘어나도 직접 스캔 대상을 지정할 필요 없고, OCP의 원칙을 지킨다 생각하기 때문입니다.
+    
+</details>
+
+10. 현재는 api gradle 만 build 를 하고 있었는데, 각각 gradle(root, core) 을 직접 build 해봅시다.  
+11. <details><summary> gradle build error 가 발생하는 문제를 해결해 봅시다.   </summary>
+
+    ./gradlew build 를 입력하시거나 우측에 직접 gradle ui 창을 통해 빌드를 하면 에러가 발생했을겁니다.   
+    그 전에 잘 되는 이유는 api 모듈을 빌드한 것였고, bootJar Task 작업이 실패했다고 예외를 확인해주시면 됩니다.   
+    BootJar는 Spring Boot 기능이 포함된 실행 가능한 JAR 파일로 패키징 합니다.      
+    해당 Task 는 default 로 true 이기때문에 @SpringBootApplication 가 없는 Core 모듈은 bootJar 작업에 사용할 기본 클래스를 결정하지 못했음으로 예외가 발생하게 된 것 입니다.
+
+</details>
+
+12. Task 들의 설정을 진행하기 위해 루트 gradle 로 이동합니다.
+13. <details><summary> 토글을 열어 설정을 합니다.   </summary>
+
+    ```groovy
+    
+    plugins {
+        id 'java'
+        id 'org.springframework.boot' version '2.7.14' apply(false)
+        id 'io.spring.dependency-management' version '1.0.15.RELEASE'
+    }
+    
+    allprojects {
+        group = 'hello'
+        version = '0.0.1-SNAPSHOT'
+        
+        java {
+            sourceCompatibility = '11'
+        }
+        
+        repositories {
+            mavenCentral()
+        }
+    }
+        
+    subprojects {
+        apply { plugin('java') }
+        apply { plugin('org.springframework.boot') }
+        apply { plugin('io.spring.dependency-management') }
+    
+        tasks.named('bootJar') {
+            enabled = false
+        }
+    
+        tasks.named('jar') {
+            enabled = true
+        }
+    
+        tasks.named('test') {
+            useJUnitPlatform()
+        }
+    }
+    ```
+
+    1. Jar 는 Spring Boot 기능 없이 클래스 및 리소스를 표준 JAR 파일로 패키징합니다. 애플리케이션을 실행하기 위한 내장된 톰캣을 포함하지 않습니다.
+    2. BootJar 는Spring Boot 기능이 포함된 실행 가능한 JAR 파일로 패키징 합니다. 해당 Task 는 default 로 true 이기때문에 @SpringBootApplication 가 없는 Core 모듈은 bootJar 작업에 사용할 기본 클래스를 결정하지 못했음으로 예외가 발생하게 된 것 입니다.
+    3. 상단 plugins 의 apply(false) 가 있는데 위와 같이 사용한 이유는 루트에서는 스프링 부트가 필요하지 않고, 플러그인의 정보들이 루트 프로젝트에서는 로드되지만 실제 플러그인 기능은 루트 프로젝트에 적용하지 않고 나중에 서브 프로젝트에서 명시적으로 적용할 수 있기 때문입니다.
+
+</details>
+
+14. step-2 가 완료되었습니다. 혹시 문제 해결이 잘 안되는 경우 step-2 branch 로 이동하여 확인하면 됩니다.
